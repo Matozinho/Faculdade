@@ -1,0 +1,311 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+#include<string.h>
+
+//=======estruturas===================//
+//estrutura de nós das filas
+typedef struct QNode
+{
+    struct QNode *next;
+    struct QNode *prev;
+    short ID, FUEL;
+}QNode;
+
+//estrutura da cabeça da fila
+typedef struct FILA
+{
+    QNode *tail;
+    QNode *head;
+    unsigned length;
+}FILA;
+//======================================//
+
+//========variáveiis globais=========//
+FILA pouso[3], dec[3];
+//===================================//
+
+//=================funções==========================//
+//inicia a fila
+void initQueue(FILA *F)
+{
+    F->head = NULL;
+    F->tail = NULL;
+    F->length = 0;
+}
+
+void printFila(FILA F)
+{
+	QNode *p = F.tail;
+	
+    printf("[");
+    if(F.length)
+    {
+        do
+        {
+            printf("ID: %u || GASOLINA: %u", p->ID, p->FUEL);
+            if(p->next != F.tail)
+                printf(", ");
+            p = p->next;
+            
+        }while (p != F.tail);
+    }
+    printf("]");
+}
+
+//retorna o indice da menor fila
+int menor(int estado)
+{
+    if(estado == 0) //estado de pouso
+    {
+        if(pouso[0].length <= pouso[1].length)
+            return 0;
+        else 
+            return 1;   
+    }
+    else //estado de decolagem
+    {
+        short menor;
+        int ret = 2, i;
+        
+        menor = dec[2].length;
+
+        for(i=1; i>=0; i--)
+        {
+            if(menor > dec[i].length)
+            {
+                menor = dec[i].length;
+                ret = i;
+            }
+        }  
+        return ret;
+    }
+}
+
+//diminui o combustivel dos aviões
+void resetaTempo(FILA *F)
+{
+    QNode *p = F->tail;
+    
+    do
+    {
+        p->FUEL--;
+        p = p->next;
+    }while(p != F->tail);
+}
+
+//retira o avião do começo da fila
+void pop(FILA *F)
+{
+    QNode *p = F->head;
+
+    if(F->head == F->tail)
+    {
+        free(p);
+        F->tail = NULL;
+        F->head = NULL;
+    }
+    else
+    {
+        p->prev->next = F->tail;
+        F->tail->prev = p->prev;
+        F->head = p->prev;
+        free(p);
+    }
+
+    F->length--;
+}
+
+//insere na cabeça da fila
+void insertHead(FILA *F, QNode *p)
+{
+    p->prev = F->head;
+    p->next = F->tail;
+    F->head->next = p;
+    F->tail->prev = p;
+    F->head = p;
+
+    F->length++;
+}
+
+//insere no final da fila
+void insertTail(FILA *F, QNode *p)//sempre há no mínimo 1 elemento na fila
+{
+    if(F->length == 0)
+    {
+        F->head = p;
+        F->tail = p;
+        p->next = p;
+        p->prev = p;
+    }
+    else
+    {   
+        F->tail->prev = p;
+        F->head->next = p;
+        p->prev = F->head;
+        p->next = F->tail;
+        F->tail = p;
+    }
+    
+    F->length++;
+}
+
+//busca se há um avião em risco na fila
+QNode* buscaRisco(FILA *F)
+{
+    QNode *p = F->tail;
+    QNode *risco = NULL;
+
+    do
+    {
+        if(p->FUEL <= 2)
+        {
+            if(risco && p->FUEL == 1) //se houver avião com gasolina 1
+                return (risco = p);
+            else
+                risco = p;
+        }    
+    } while (p != F->tail);
+
+    return risco;
+}
+
+//gira até q o avião em risco seja o primeiro
+void giraFila(FILA *F, QNode *p)
+{
+    while(p != F->head)
+    {
+        F->head = F->head->prev;
+        F->tail = F->tail->prev;
+    }   
+}
+
+//decide a fila qual será inserido
+void defineFila(QNode *p, short estado)
+{
+    if(estado == 0) //estado de pouso
+    {
+        if(p->FUEL == 1) //caso a gasolina seja 1
+        {
+            if(pouso[2].length) //caso já tenha alguem na fila 3(emergencia)
+                insertTail(&pouso[menor(0)], p);
+            else
+                insertTail(&pouso[2], p);
+        }
+        else
+            insertTail(&pouso[menor(estado)], p);    
+    }
+    else //estado de decolagem 
+        insertTail(&dec[menor(1)], p);
+       
+}
+
+//Organiza as decolagens e aterrisagens
+void reorganiza()
+{
+    short i, pista[3]; //sinalizar se a pista está ou não ocupada
+    memset(pista, 0, sizeof(short)*3); //reseta todas as pistas com livre (0)
+    QNode *risco = NULL;
+
+    for(i=0; i<3; i++) //identifica se há algum caso de risco 
+        if(pouso[i].length)
+        {
+            risco = buscaRisco(&pouso[i]);
+            if(risco)
+            {
+                giraFila(&pouso[i], risco);
+                pop(&pouso[i]);
+                pista[i] = 1;
+            }   
+        }   
+    
+    for(i=0; i<3; i++) //para casos fora os de risco
+    {
+        if(pouso[i].length && pista[i] == 0 && pouso[i].length >= dec[i].length) //verifica se há aviões na fila e se os aviões 
+            pop(&pouso[i]);
+        else if(dec[i].length && pista[i] == 0)
+            pop(&dec[i]);
+    }
+    
+    for(i=0; i<3; i++)
+        if(pouso[i].length) //se tiver algo na fila
+            resetaTempo(&pouso[i]); //diminui o combustivel dos aviões na fila de pouso
+
+    if(dec[2].length == 0) //caso a pista 3 de decolagem esteja vazia, passa o avião para a pista preferencial de decolagem
+    {
+        for(i=0; i<2; i++)
+            if(dec[i].length && dec[2].length == 0)
+            {
+                insertTail(&dec[2], dec[i].head);
+                pop(&dec[i]);
+            }   
+    }
+    
+}
+//======================================================================//
+
+int main()
+{
+    int i, j, k, qnt, fon;
+    QNode *p;
+    unsigned id = 1;
+
+    //inicia as filas de pouso e de decolagem 
+    for(i=0; i<3; i++)
+    {
+        initQueue(&pouso[i]);
+        initQueue(&dec[i]);
+    }
+    
+    srand(time(NULL));
+
+    while(scanf("%d", &fon) && fon)
+    {
+        for(i=0; i<2; i++) //caso 0: gera aviões de pouso // caso 1: gera aviões de decolagem
+        { 
+            qnt = rand() % 4; //quantidade de aviões para decolagem/pouso
+
+            if(i==0)
+                printf("Avioes Gerados para pouso: %d\n", qnt);
+            else
+                printf("Avioes Gerados para decolagem: %d\n", qnt);
+            
+            for(j=0; j<qnt; j++)
+            {
+                //gera os aviões
+                p = (QNode*)malloc(sizeof(QNode));               
+                p->ID = id++;
+                p->FUEL = (rand()%20) + 1;
+
+                defineFila(p, i); 
+            }
+        }   
+    
+        reorganiza();
+
+        printf("\tAPOS A DECOLAGEM\n\n");
+
+        printf("\tFILA AVIOES PARA POUSO\n\n");
+        for(k=0; k<3; k++)
+        {
+            if(k+1 == 3)
+                printf("Fila de EmergEncia (para avioes com 1 de gasolina)\n");
+            else
+                printf("Fila %d\n", k+1);
+            printf("Quantidade de Avioes na fila %d: %u\n", k+1, pouso[k].length);
+            printFila(pouso[k]);
+            printf("\n");
+        }
+
+        printf("\tFILA DE AVIOES PARA DECOLAGEM\n");
+        for(k=0; k<3; k++)
+        {
+            printf("Fila %d\n", k+1);
+            printf("Quantidade de avioes na fila %d: %u\n", k+1, dec[k].length);
+            printFila(dec[k]);
+            printf("\n\n");
+        }
+    }   
+
+    return 0;
+}
