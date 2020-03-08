@@ -1,6 +1,7 @@
 
 //====Variavéis=================================================
 var sru, srn, srt, ctx1, ctx2, ctx3, frames = 0;
+var click = 0
 var propX, propY;
 var fatorCorrecao;
     var ponto = document.getElementById('pontos');
@@ -100,16 +101,16 @@ sru.addEventListener("mousedown", function(e) {
     {
         trying = getMousePos(sru, e);
         sruX[flag] = trying.x-1.0;
-        sruY[flag] = trying.y-2.0;
+        sruY[flag] = trying.y-3.0;
 
-        xUT[flag] = ( (((e.clientX-rect.left)*propX)/sru.width) * (xMax.value - xMin.value) ) + (xMin.value * 1.0)-1.0;
-        yUT[flag] = ( (((e.clientY-rect.top)*propY)/sru.height) * (yMax.value - yMin.value) ) + (yMin.value * 1.0)-1.0;
+        xUT[flag] = xU; 
+        yUT[flag] = yU 
 
-        srnX[flag] = (sruX[flag] - xMin.value) / (xMax.value - xMin.value);
-        srnY[flag] = (sruY[flag] - yMin.value) / (yMax.value - yMin.value);
+        srnX[flag] = ((sruX[flag]+1.0) / sru.width);
+        srnY[flag] = ((sruY[flag]+3.0) / sru.height);
 
-        srtX[flag] = (srnX[flag] * (xMaxt.value - xMint.value)) + xMint.value;
-        srtY[flag] = (srnY[flag] * (yMaxt.value - yMint.value)) + yMint.value;
+        srtX[flag] = (((srnX[flag]) * (xMaxt.value - xMint.value)) + xMint.value);
+        srtY[flag] = (((srnY[flag]) * (yMaxt.value - yMint.value)) + yMint.value);
 
         //começa desenho no sru
         ctx1.beginPath();
@@ -236,12 +237,10 @@ for(var z = 0; z < 4; z++){
 sru.addEventListener("mousemove", function(e) {
     
     var mousePos = getMousePos(sru, e);
-    var xU = ( ((mousePos.x*propX)/sru.width) * (xMax.value - xMin.value) ) + (xMin.value * 1.0);
-    var yU = ( ((mousePos.y*propY)/sru.height) * (yMax.value - yMin.value) ) + (yMin.value * 1.0);
- 
+    xU = ( ((mousePos.x*propX)/sru.width) * (xMax.value - xMin.value) ) + (xMin.value * 1.0);
+    yU = ( ((mousePos.y*propY)/sru.height) * (yMax.value - yMin.value) ) + (yMin.value * 1.0);
         var coor = "Coordinates: (" + xU.toFixed(2) + " ; " + yU.toFixed(2) + ")";
         pU.innerHTML = coor;
-
     });
     sru.addEventListener("mouseout", function(e) {
             document.getElementById('p1').innerHTML = "Coordinates:";
@@ -261,9 +260,10 @@ for(var z = 0; z < 4; z++){
 }
 for(var z = 0; z < 4; z++){
     ponto.rows[z+1].cells[3].style.fontSize = "small";
-    ponto.rows[z+1].cells[3].innerHTML = Math.round(srtX[z]+5) + " ; " + Math.round(srtY[z]);
+    ponto.rows[z+1].cells[3].innerHTML = Math.round(srtX[z]) + " ; " + Math.round(srtY[z]);
 }
 }
+
 function reloadTabela(){
     if(sruX[3]) {
         tabela();
@@ -273,7 +273,28 @@ function reloadTabela(){
 function update() {
     frames++;
     b1.onclick = function() {
-        window.location.reload();
+        ctx1.clearRect(0,0,sru.width, sru.height);
+        ctx2.clearRect(0,0,srn.width, srn.height);
+        ctx3.clearRect(0,0, srt.width, srt.height);
+        flag = 0;
+        xU=0;
+        yU=0;
+        xN=0;
+        yN=0;
+      
+        for(var f=0; f<4; f++)
+        {
+            sruX[f]=0;
+            sruY[f]=0;
+            srnX[f]=0;
+            srnY[f]=0;
+            srtX[f]=0;
+            srtY[f]=0;
+            xUT[f]=0;
+            yUT[f]=0;
+        }
+        
+        tabela();
     }
 }
 
@@ -300,7 +321,7 @@ function show() {
 
             var mousePos = getMousePos(srt, e);
 
-             var coor = "Coordinates: (" + 	mousePos.x.toFixed(2) + " ; " + mousePos.y.toFixed(2) + ")";
+             var coor = "Coordinates: (" + 	(mousePos.x-1.0).toFixed(2) + " ; " + (mousePos.y-3.0).toFixed(2) + ")";
              pT.innerHTML= coor;
         });
         
@@ -309,39 +330,50 @@ function show() {
         });
 }
 
-function info_box(tipo) {
-
-    selectedValue = document.getElementById("correcao").value;
-    var popup;
-
-    if(tipo == "Popup1")
-        popup = document.getElementById("normalizado");
-    else
-    {
-        if(selectedValue == "sem_correcao")
-            popup = document.getElementById("semCorrecao");
-
-        else if(selectedValue == "em_x")
-            popup = document.getElementById("emX");
-        else
-            popup = document.getElementById("emY");
-    }	
-
-    popup.classList.toggle("show");
-}
-
 //da as coordenadas do mouse no canvas
 function getMousePos(canvas, e) {
     var rect = canvas.getBoundingClientRect();
-    console.log("left: "+rect.left)
-    console.log("top: "+rect.top)
-    console.log("x: "+e.clientX)
-    console.log("y: "+e.clientY)
+
        return {
           x: e.clientX - rect.left - 1.0, //-1 das bordas
          y: e.clientY - rect.top - 1.0
     }
     
 }
+
+function exibepopover(){
+
+    if(click < 2)
+    {
+        selectedValue = document.getElementById("correcao").value;
+        
+        if(selectedValue == "sem_correcao")
+        {
+            $('#popCorrec').popover({html: true, title: "Sem Correção", content: "D<sub>X</sub> = X<sub>n</sub> * ( DX<sub>max</sub> − DX<sub>min</sub> ) + DX<sub>min</sub> <br>D<sub>Y</sub> = Y<sub>n</sub> * ( DY<sub>max</sub> − DY<sub>min</sub> D) + DY<sub>min</sub>"})
+            console.log("SEM")
+        }
+        else if(selectedValue == "em_x")
+        {
+            $('#popCorrec').popover({html: true, title: "Correção em X", content: "D<sub>X</sub> = ( X<sub>n</sub> *  ( DX<sub>max</sub> − DX<sub>min</sub> ) + DX<sub>min</sub> ) * FC <br>D<sub>Y</sub> = Y<sub>n</sub> * ( DY<sub>max</sub> − DY<sub>min</sub> ) + DY<sub>min</sub> ) <br><br>FC = ( (X<sub>max</sub> - X<sub>min</sub>) / (Y<sub>max</sub> - Y<sub>min</sub>) ) / ( (DX<sub>max</sub> - DX<sub>min</sub>) / (DY<sub>max</sub> - DY<sub>min</sub>) )"})
+            console.log("x")
+        }
+        else
+        {
+            $('#popCorrec').popover({html: true, title: "Correção em Y", content: "D<sub>X</sub> = X<sub>n</sub> * ( DX<sub>max</sub> − DX<sub>min</sub> ) + DX<sub>min</sub> ) <br>D<sub>Y</sub> = Y<sub>n</sub> * ( DY<sub>max</sub> − DY<sub>min</sub> ) + DY<sub>min</sub> ) * FC <br><br>FC = ( (DX<sub>max</sub> - DX<sub>min</sub>) / (DY<sub>max</sub> - DY<sub>min</sub>) ) / ( (X<sub>max</sub> - X<sub>min</sub>) / (Y<sub>max</sub> - Y<sub>min</sub>) ) "})
+            console.log("Y")
+        }
+        click++;
+    }
+    else
+    {
+        $('#popCorrec').popover('dispose');
+        click = 0;
+    }
+    
+}
+
+$(function () {
+    $('#fon').popover({html: true})
+})
 //====Incialização da tela==========================================
 main();
