@@ -8,21 +8,30 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
-    <title>Hello, world!</title>
+    <title>Covnersão Matricial</title>
   </head>
   <body>
 
     <div class="container-fluid">
-      
-      <div class="row">
+   
+      <div class="row d-flex justify-content-center">
         <h1>Algoritimos de Conversão Matricial</h1>
       </div>
 
-      <div id="canvas" class="row"></div>
-
       <div class="row">
+        <div class="col-md-2 col-lg-2 d-flex align-items-center">
+            <div class="input-group">
+                <span >Número de Colunas</span>    
+                <input type="number" id="input_col" value="45">  
+                <button onclick="redefineCol()" class="btn btn-light m-2" type="button">Redefinir</button>
+            </div>
+        </div>
+        <div id="canvas" class="col-md-10 col-lg-10 d-flex"></div> 
+      </div>
 
-        <div id="Radio_1" class="btn-group btn-group-toggle" data-toggle="buttons">
+      <div class="row d-flex justify-content-center mt-2">
+
+        <div id="Radio_1" class="col-md-6 btn-group btn-group-toggle" data-toggle="buttons">
           <label class="btn btn-secondary active">
             <input type="radio" name="typeDraw" onclick="selectedValue(this.value)" value="line_1" autocomplete="off" checked> Reta: Algoritmo Incremental
           </label>
@@ -37,22 +46,8 @@
           </label>
         </div>
 
-        <div class="input-group">
-          <div class="input-group-prepend">
-            <span class="input-group-text" id="">Número de Colunas</span>
-          </div>
-          <input type="number" id="input_col" value="45">
-          <div class="input-group-append">
-            <button onclick="redefineCol()" class="btn btn-outline-secondary" type="button">Redefinir</button>
-          </div>
-        </div>
-
-        <button onclick="redefineCol()" id="limpar" type="button" class="btn btn-light">Limpar</button>
-     
+        <button onclick="redefineCol()" id="limpar" type="button" class="btn btn-light">Limpar</button>  
       </div>
-      
-    
-
     </div>
  
 
