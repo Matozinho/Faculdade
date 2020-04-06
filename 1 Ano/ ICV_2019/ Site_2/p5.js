@@ -1,5 +1,5 @@
 //=================Variáveis Globais====================//
-let canvas, Cwidth = 1200, Cheight = 800; //variáveis sobre o canvas
+let canvas, Cwidth = 900, Cheight = 500; //variáveis sobre o canvas
 let colunas, linhas, tamanho; //variáveis para resolução do canvas (Quantidade de quadrados)
 let Xpontos = [2], Ypontos = [2]; //para guardar as coordenadas dos pontos
 let counter = 0;
