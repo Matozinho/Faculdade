@@ -110,6 +110,7 @@ function drawLine_1(){
 
   //trata os casos de linha vertical
   if(x1 == x2){
+    console.log(m);
     let aux1, aux2;
     x = x1;
     if(y2 < y1){
@@ -122,8 +123,7 @@ function drawLine_1(){
     }
 
     for(y = aux1; y < aux2; y++)
-      WritePixel(x, Math.round(y));
-      
+      WritePixel(x, Math.round(y));  
   }
   //trata os casos de coeficiente fora do intervalo de -1 a 1
   else if(m < -1 || m > 1){
@@ -193,7 +193,7 @@ function drawLine_2(){
     x = x1;
     y = y1;
 
-    //para reta descendente - incrementa x e y
+    //para reta descendente - incre menta x e y
     if(y2 > y1){
       while(x < x2){
         if(d <= 0){
@@ -208,7 +208,7 @@ function drawLine_2(){
         WritePixel(x, y);
       }
     }
-    //para reta ascendente - incrementa x e decrementa o y
+    //para reta ascendente - incrementa x e decrementa o y  
     else{
       while(x < x2){
         if(d <= 0){
@@ -388,6 +388,7 @@ function drawElipse(){
 
   Xcenter = x1 + a;
   Ycenter = y1 + b;
+  resetaCanvas();
   WritePixel(Xcenter, Ycenter);
   
   let k = y1 - x1;
